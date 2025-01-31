@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os/exec"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -88,6 +90,9 @@ func executeCode(req ExecuteRequest) (ExecuteResponse, error) {
 		err = cmd.Wait()
 	}
 	elapsed := time.Since(start)
+	var usage syscall.Rusage
+
+	syscall.Getrusage(syscall.RUSAGE_CHILDREN, &usage)
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return ExecuteResponse{
@@ -110,7 +115,7 @@ func executeCode(req ExecuteRequest) (ExecuteResponse, error) {
 	return ExecuteResponse{
 		Output:     out.String(),
 		Error:      "",
-		MemoryUsed: "0.0",
+		MemoryUsed: fmt.Sprintf("%d KB", usage.Maxrss),
 		CpuTime:    elapsed.String(),
 	}, nil
 }
