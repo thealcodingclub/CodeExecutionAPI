@@ -1,6 +1,7 @@
 package executors
 
 import (
+	dataformating "CodeExecutionAPI/dataFormating"
 	"CodeExecutionAPI/models"
 	"bytes"
 	"context"
@@ -15,11 +16,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	var cmd *exec.Cmd
 	switch req.Language {
 	case "python":
-		cmd = exec.Command("python3", "-c", req.Code)
-	case "c":
-		cmd = exec.Command("sh", "-c", "echo '"+req.Code+"' | gcc -x c -o /tmp/a.out - && /tmp/a.out")
-	case "java":
-		cmd = exec.Command("sh", "-c", "echo '"+req.Code+"' > /tmp/Main.java && javac /tmp/Main.java && java -cp /tmp Main")
+		cmd = exec.Command("firejail", "--net=none", "python3", "-c", req.Code)
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")
 	}
@@ -72,7 +69,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 
 	return models.ExecuteResponse{
 		Output:     out.String(),
-		Error:      stderr.String(),
+		Error:      dataformating.TrimLines(stderr.String()),
 		MemoryUsed: memoryUsed,
 		CpuTime:    elapsed.String(),
 	}, nil
