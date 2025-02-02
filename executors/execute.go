@@ -55,7 +55,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	var usage syscall.Rusage
 	var waitStatus syscall.WaitStatus
 
-	_, waitErr := syscall.Wait4(cmd.Process.Pid, &waitStatus, 0, &usage)
+	syscall.Wait4(cmd.Process.Pid, &waitStatus, 0, &usage)
 	elapsed := time.Since(start)
 
 	memoryUsed := fmt.Sprintf("%d KB", usage.Maxrss)
@@ -70,20 +70,9 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 		}, nil
 	}
 
-	// Handle errors
-	if waitErr != nil {
-		return models.ExecuteResponse{
-			Output:     "Error occured",
-			Error:      stderr.String(),
-			MemoryUsed: memoryUsed,
-			CpuTime:    elapsed.String(),
-		}, nil
-	}
-
-	// Return successful response
 	return models.ExecuteResponse{
 		Output:     out.String(),
-		Error:      "",
+		Error:      stderr.String(),
 		MemoryUsed: memoryUsed,
 		CpuTime:    elapsed.String(),
 	}, nil
