@@ -3,13 +3,103 @@ package main
 import (
 	"CodeExecutionAPI/executors"
 	"CodeExecutionAPI/models"
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// Main function to start the server
+func checkFileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func getLinuxDistro() string {
+	if checkFileExists("/etc/arch-release") {
+		return "Arch"
+	} else if checkFileExists("/etc/debian_version") {
+		return "Debian"
+	} else if data, err := os.ReadFile("/etc/os-release"); err == nil {
+		content := string(data)
+		if strings.Contains(content, "Ubuntu") {
+			return "Ubuntu"
+		} else if strings.Contains(content, "Fedora") {
+			return "Fedora"
+		} else {
+			return "Unknown"
+		}
+	} else {
+		return "Unknown"
+	}
+}
+
+func isCommandAvail(cmdName string) bool {
+	Cmd := exec.Command("which", cmdName)
+	err := Cmd.Run()
+	return err == nil
+}
+
+func installFirejail(distro string) {
+	if isCommandAvail("firejail") {
+		fmt.Println("Firejail is already installed.")
+	} else {
+		var cmd *exec.Cmd
+
+		switch distro {
+		case "Debian", "Ubuntu":
+			cmd = exec.Command("sudo", "apt", "install", "-y", "firejail")
+		case "Arch":
+			cmd = exec.Command("sudo", "pacman", "-S", "--noconfirm", "firejail")
+		case "Fedora":
+			cmd = exec.Command("sudo", "dnf", "install", "-y", "firejail")
+		default:
+			fmt.Println("Unsupported distro, sorry.")
+		}
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal("Error while installing Firejail.")
+		} else {
+			fmt.Println("Firejail insalled successfully.")
+		}
+	}
+}
+
 func main() {
+
+	Os := runtime.GOOS
+
+	if Os == "win32" {
+		fmt.Println("You are on WINDOWS Ser, please use WSL")
+		os.Exit(1)
+	} else if Os == "linux" || Os == "linux-gnu" {
+		distro := getLinuxDistro()
+
+		if distro == "Unknown" {
+			fmt.Println("Unknown Linux Distribution.")
+		} else if distro == "Arch" || distro == "Debian" || distro == "Fedora" || distro == "Ubuntu" {
+			installFirejail(distro)
+		} else {
+			fmt.Println("Unsupported OS ! ")
+			os.Exit(1)
+		}
+	}
+
 	r := gin.Default()
+
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(302, "https://github.com/thealcodingclub/CodeExecutionAPI")
+	})
+
+	r.GET("/execute", func(c *gin.Context) {
+		c.Redirect(302, "/")
+	})
 
 	r.POST("/execute", func(c *gin.Context) {
 		var req models.ExecuteRequest
@@ -44,6 +134,5 @@ func main() {
 		c.JSON(200, output)
 	})
 
-	// Start the server
-	r.Run(":8080") // Default port is 8080
+	r.Run(":8080")
 }
