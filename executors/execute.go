@@ -15,7 +15,14 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	var cmd *exec.Cmd
 	switch req.Language {
 	case "python":
-		cmd = exec.Command("firejail", "--quiet", "--net=none", "python3", "-c", req.Code)
+		cmd = exec.Command("firejail",
+			"--private",
+			"--quiet",
+			"--noroot",
+			"--caps.drop=all",
+			"--read-only=/",
+			"--net=none",
+			"python3", "-c", req.Code)
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")
 	}
