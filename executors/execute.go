@@ -118,7 +118,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
         "--net=none",
         maxMemoryFlag,
         binaryFile)
-		
+
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")
 	}
@@ -157,13 +157,31 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	}
 
 	// Wait for the process and capture resource usage
-	var usage syscall.Rusage
-	var waitStatus syscall.WaitStatus
-
-	syscall.Wait4(cmd.Process.Pid, &waitStatus, 0, &usage)
+	// var usage syscall.Rusage
+	// var waitStatus syscall.WaitStatus
+    // Potential problem in calling syscall.Wait4 directly instead of cmd.Wait(), 
+	// which bypasses the built-in process-wait logic in exec.Cmd and can lead 
+	// to missed exit codes or race conditions in the timeout goroutine
+	// syscall.Wait4(cmd.Process.Pid, &waitStatus, 0, &usage)
+	// elapsed := time.Since(start)
+	errWait := cmd.Wait()
 	elapsed := time.Since(start)
+	var memoryUsed string
+	if rusage, ok := cmd.ProcessState.SysUsage().(*syscall.Rusage); ok {
+		memoryUsed = fmt.Sprintf("%d KB", rusage.Maxrss)
+	} else {
+		memoryUsed = "Unknown"
+	}
 
-	memoryUsed := fmt.Sprintf("%d KB", usage.Maxrss)
+	// Handle command wait error
+	if errWait != nil {
+		return models.ExecuteResponse{
+			Output:     out.String(),
+			Error:      fmt.Sprintf("Error waiting for command: %s", errWait),
+			MemoryUsed: memoryUsed,
+			CpuTime:    elapsed.String(),
+		}, nil
+	}
 
 	// Handle timeout separately
 	if ctx.Err() == context.DeadlineExceeded {
