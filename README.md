@@ -132,3 +132,47 @@ curl --location 'localhost:8080/execute' \
     "cpu_time": "803.820445ms"
 }
 ```
+
+---
+
+#### Request body format (Example 4):
+
+```json
+{
+    "language": "python",
+    "code": "a = input()\nprint(f'first value entered is {a}.')\nb=input()\nprint(f'second value entered is {b}.')",
+    "inputs": [
+        "bob",
+        "alice"
+    ]
+}
+```
+
+<details>
+<summary>Click to copy curl command</summary>
+
+```bash
+curl --location 'localhost:8080/execute' \
+--header 'Content-Type: application/json' \
+--data '{
+    "language": "python",
+    "code": "a = input()\nprint(f'\''first value entered is {a}.'\'')\nb=input()\nprint(f'\''second value entered is {b}.'\'')",
+    "inputs": [
+        "bob",
+        "alice"
+    ]
+}'
+```
+
+</details>
+
+#### Response body format (Example 4):
+
+```json
+{
+    "output": "first value entered is bob.\nsecond value entered is alice.\n",
+    "error": "",
+    "memory_used": "13400 KB",
+    "cpu_time": "135.266682ms"
+}
+```
