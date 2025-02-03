@@ -60,9 +60,69 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
             "--net=none",
             maxMemoryFlag,
             "bun", "run", "-e", req.Code)
+	case "cpp":
+    	tmpFile := "/tmp/code.cpp"
+    	binaryFile := "/tmp/a.out"
+    	if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
+        	return models.ExecuteResponse{}, errors.New("error writing temporary C++ file")
+    	}
+    	compileCmd := exec.Command("g++", tmpFile, "-o", binaryFile)
+    	if err := compileCmd.Run(); err != nil {
+        	return models.ExecuteResponse{}, errors.New("compilation error")
+    	}
+    	cmd = exec.Command("firejail",
+        	"--private",
+        	"--quiet",
+        	"--noroot",
+        	"--caps.drop=all",
+       		"--read-only=/",
+        	"--net=none",
+        	maxMemoryFlag,
+        	binaryFile)
+
+	case "java":
+    tmpFile := "/tmp/Main.java"
+    if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
+        return models.ExecuteResponse{}, errors.New("error writing Java file")
+    }
+    compileCmd := exec.Command("javac", tmpFile)
+    if err := compileCmd.Run(); err != nil {
+        return models.ExecuteResponse{}, errors.New("compilation error")
+    }
+    cmd = exec.Command("firejail",
+        "--private",
+        "--quiet",
+        "--noroot",
+        "--caps.drop=all",
+        "--read-only=/",
+        "--net=none",
+        maxMemoryFlag,
+        "java", "-cp", "/tmp", "Main")
+
+	case "go":
+    tmpFile := "/tmp/code.go"
+    binaryFile := "/tmp/app"
+    if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
+        return models.ExecuteResponse{}, errors.New("error writing Go file")
+    }
+    compileCmd := exec.Command("go", "build", "-o", binaryFile, tmpFile)
+    if err := compileCmd.Run(); err != nil {
+        return models.ExecuteResponse{}, errors.New("compilation error")
+    }
+    cmd = exec.Command("firejail",
+        "--private",
+        "--quiet",
+        "--noroot",
+        "--caps.drop=all",
+        "--read-only=/",
+        "--net=none",
+        maxMemoryFlag,
+        binaryFile)
+		
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")
 	}
+
 
 	var out bytes.Buffer
 	var stderr bytes.Buffer
