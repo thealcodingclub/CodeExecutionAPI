@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -26,6 +27,39 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			"--net=none",
 			maxMemoryFlag,
 			"python3", "-c", req.Code)
+	case "c":
+        // Write code to a temporary file and compile
+        tmpFile := "/tmp/code.c"
+        binaryFile := "/tmp/a.out"
+        if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
+            return models.ExecuteResponse{}, errors.New("error writing temporary C file")
+        }
+        // Compile the C code
+        compileCmd := exec.Command("gcc", tmpFile, "-o", binaryFile)
+        if err := compileCmd.Run(); err != nil {
+            return models.ExecuteResponse{}, errors.New("compilation error")
+        }
+        // Run the compiled binary in firejail
+        cmd = exec.Command("firejail",
+            "--private",
+            "--quiet",
+            "--noroot",
+            "--caps.drop=all",
+            "--read-only=/",
+            "--net=none",
+            maxMemoryFlag,
+            binaryFile)
+    case "javascript":
+        // Using bun to run javascript
+        cmd = exec.Command("firejail",
+            "--private",
+            "--quiet",
+            "--noroot",
+            "--caps.drop=all",
+            "--read-only=/",
+            "--net=none",
+            maxMemoryFlag,
+            "bun", "run", "-e", req.Code)
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")
 	}
