@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -43,6 +44,11 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 		}
 	}()
 	defer cancel()
+
+	// Handle inputs
+	if len(req.Inputs) > 0 {
+		cmd.Stdin = strings.NewReader(strings.Join(req.Inputs, "\n"))
+	}
 
 	// Start execution timing
 	start := time.Now()

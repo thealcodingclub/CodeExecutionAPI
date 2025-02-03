@@ -1,10 +1,11 @@
 package models
 
 type ExecuteRequest struct {
-	Language  string `json:"language"`
-	Code      string `json:"code"`
-	Timeout   int    `json:"timeout"`
-	MaxMemory int    `json:"max_memory"`
+	Language  string   `json:"language"`
+	Code      string   `json:"code"`
+	Timeout   int      `json:"timeout"`
+	MaxMemory int      `json:"max_memory"`
+	Inputs    []string `json:"inputs,omitempty"`
 }
 
 type ExecuteResponse struct {
