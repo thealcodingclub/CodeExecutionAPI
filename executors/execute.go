@@ -13,6 +13,7 @@ import (
 
 func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	var cmd *exec.Cmd
+	maxMemoryFlag := fmt.Sprintf("--rlimit-as=%dk", req.MaxMemory)
 	switch req.Language {
 	case "python":
 		cmd = exec.Command("firejail",
@@ -22,6 +23,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			"--caps.drop=all",
 			"--read-only=/",
 			"--net=none",
+			maxMemoryFlag,
 			"python3", "-c", req.Code)
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")

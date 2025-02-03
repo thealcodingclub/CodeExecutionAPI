@@ -22,6 +22,18 @@ func main() {
 			req.Timeout = 5
 		}
 
+		if req.Timeout > 60 {
+			req.Timeout = 60
+		}
+
+		if req.MaxMemory == 0 {
+			req.MaxMemory = 32768
+		}
+
+		if req.MaxMemory > 131072 {
+			req.MaxMemory = 131072
+		}
+
 		// Execute the code
 		output, err := executors.ExecuteCode(req)
 		if err != nil {
