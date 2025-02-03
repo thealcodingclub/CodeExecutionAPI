@@ -2,6 +2,7 @@ package executors
 
 import (
 	"CodeExecutionAPI/models"
+	"CodeExecutionAPI/resourcemanager"
 	"bytes"
 	"context"
 	"errors"
@@ -15,6 +16,16 @@ import (
 func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	var cmd *exec.Cmd
 	maxMemoryFlag := fmt.Sprintf("--rlimit-as=%dk", req.MaxMemory)
+
+	if !resourcemanager.ReserveMemory(req.MaxMemory) {
+		return models.ExecuteResponse{
+			Output:     "",
+			Error:      "Resources Unavailable, Try again later",
+			MemoryUsed: "0 KB",
+			CpuTime:    "0.0s",
+		}, errors.New("resources unavailable, try again later")
+	}
+
 	switch req.Language {
 	case "python":
 		cmd = exec.Command("firejail",
@@ -68,6 +79,8 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 
 	syscall.Wait4(cmd.Process.Pid, &waitStatus, 0, &usage)
 	elapsed := time.Since(start)
+
+	resourcemanager.ReleaseMemory(req.MaxMemory)
 
 	memoryUsed := fmt.Sprintf("%d KB", usage.Maxrss)
 
