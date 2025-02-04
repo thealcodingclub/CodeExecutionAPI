@@ -11,6 +11,9 @@ This route takes 4 fields:
     <summary>Click to see supported languages</summary>
 
     - python
+    - rust
+    - cpp
+    - c
 
     </details>
 
