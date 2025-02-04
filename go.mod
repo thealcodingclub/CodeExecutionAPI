@@ -1,4 +1,4 @@
-module ExecutionAPI
+module CodeExecutionAPI
 
 go 1.22.5
 
