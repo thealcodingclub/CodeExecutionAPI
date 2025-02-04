@@ -59,7 +59,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
             "--read-only=/",
             "--net=none",
             maxMemoryFlag,
-            "bun", "run", "-e", req.Code)
+            "bun", "-e", req.Code)
 	case "cpp":
     	tmpFile := "/tmp/code.cpp"
     	binaryFile := "/tmp/a.out"
