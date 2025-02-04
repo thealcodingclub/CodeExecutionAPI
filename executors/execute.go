@@ -177,7 +177,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 	if errWait != nil {
 		return models.ExecuteResponse{
 			Output:     out.String(),
-			Error:      fmt.Sprintf("Error waiting for command: %s", errWait),
+			Error:      stderr.String(),
 			MemoryUsed: memoryUsed,
 			CpuTime:    elapsed.String(),
 		}, nil
