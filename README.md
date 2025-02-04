@@ -11,6 +11,9 @@ This route takes 4 fields:
     <summary>Click to see supported languages</summary>
 
     - python
+    - rust
+    - cpp
+    - c
 
     </details>
 
@@ -36,7 +39,7 @@ This route takes 4 fields:
 <summary>Click to copy curl command</summary>
 
 ```bash
-curl --location 'localhost:8080/execute' \
+curl --location 'https://codeapi.anga.codes/execute' \
 --header 'Content-Type: application/json' \
 --data '{
     "language": "python",
@@ -73,7 +76,7 @@ curl --location 'localhost:8080/execute' \
 <summary>Click to copy curl command</summary>
 
 ```bash
-curl --location 'localhost:8080/execute' \
+curl --location 'https://codeapi.anga.codes/execute' \
 --header 'Content-Type: application/json' \
 --data '{
     "language": "python",
@@ -111,7 +114,7 @@ curl --location 'localhost:8080/execute' \
 <summary>Click to copy curl command</summary>
 
 ```bash
-curl --location 'localhost:8080/execute' \
+curl --location 'https://codeapi.anga.codes/execute' \
 --header 'Content-Type: application/json' \
 --data '{
     "language": "python",
@@ -152,7 +155,7 @@ curl --location 'localhost:8080/execute' \
 <summary>Click to copy curl command</summary>
 
 ```bash
-curl --location 'localhost:8080/execute' \
+curl --location 'https://codeapi.anga.codes/execute' \
 --header 'Content-Type: application/json' \
 --data '{
     "language": "python",
