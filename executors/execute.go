@@ -92,6 +92,8 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 		processUUID := uuid.New().String()
 		tmpFile := fmt.Sprintf("/tmp/%s.rs", processUUID)
 		binaryFile := fmt.Sprintf("/tmp/%s.rs-out", processUUID)
+		defer os.Remove(tmpFile)
+		defer os.Remove(binaryFile)
 		if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
 			return models.ExecuteResponse{}, errors.New("error writing Rust file")
 		}
@@ -108,8 +110,44 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			"--net=none",
 			maxMemoryFlag,
 			binaryFile)
-		defer os.Remove(tmpFile)
-		defer os.Remove(binaryFile)
+
+	// case "javascript":
+	// 	cmd = exec.Command("firejail",
+	// 		"--private",
+	// 		"--quiet",
+	// 		"--noroot",
+	// 		"--caps.drop=all",
+	// 		"--read-only=/",
+	// 		"--net=none",
+	// 		maxMemoryFlag,
+	// 		"bun", "-e", req.Code)
+
+	case "java":
+		processUUID := uuid.New().String()
+		tmpDir := fmt.Sprintf("/tmp/%s", processUUID)
+		tmpFile := fmt.Sprintf("%s/Main.java", tmpDir)
+		defer os.RemoveAll(tmpDir)
+		if err := os.Mkdir(tmpDir, 0755); err != nil {
+			return models.ExecuteResponse{}, errors.New("error creating temporary directory")
+		}
+		if err := os.WriteFile(tmpFile, []byte(req.Code), 0644); err != nil {
+			return models.ExecuteResponse{}, errors.New("error writing Java file")
+		}
+		compileCmd := exec.Command("javac", tmpFile)
+		var compileOut bytes.Buffer
+		compileCmd.Stderr = &compileOut
+		if err := compileCmd.Run(); err != nil {
+			return models.ExecuteResponse{}, fmt.Errorf("compilation error: %v, %s", err, compileOut.String())
+		}
+		javaMemoryFlag := fmt.Sprintf("-Xmx%dk", req.MaxMemory)
+		cmd = exec.Command("firejail",
+			"--private",
+			"--quiet",
+			"--noroot",
+			"--caps.drop=all",
+			"--read-only=/",
+			"--net=none",
+			"java", javaMemoryFlag, "-cp", tmpDir, "Main")
 
 	default:
 		return models.ExecuteResponse{}, errors.New("unsupported language")

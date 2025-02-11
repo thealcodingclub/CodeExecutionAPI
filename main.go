@@ -117,11 +117,11 @@ func main() {
 		}
 
 		if req.MaxMemory == 0 {
-			req.MaxMemory = 32768
+			req.MaxMemory = 32768 // 32 MB
 		}
 
 		if req.MaxMemory > 131072 {
-			req.MaxMemory = 131072
+			req.MaxMemory = 131072 // 128 MB
 		}
 
 		// Execute the code
