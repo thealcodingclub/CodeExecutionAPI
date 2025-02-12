@@ -52,8 +52,10 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 		}
 		// Compile the C code
 		compileCmd := exec.Command("gcc", tmpFile, "-o", binaryFile)
+		var compileOut bytes.Buffer
+		compileCmd.Stderr = &compileOut
 		if err := compileCmd.Run(); err != nil {
-			return models.ExecuteResponse{}, errors.New("compilation error")
+			return models.ExecuteResponse{}, fmt.Errorf("compilation error: %v, %s", err, compileOut.String())
 		}
 		// Run the compiled binary in firejail
 		cmd = exec.Command("firejail",
@@ -75,8 +77,10 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			return models.ExecuteResponse{}, errors.New("error writing temporary C++ file")
 		}
 		compileCmd := exec.Command("g++", tmpFile, "-o", binaryFile)
+		var compileOut bytes.Buffer
+		compileCmd.Stderr = &compileOut
 		if err := compileCmd.Run(); err != nil {
-			return models.ExecuteResponse{}, errors.New("compilation error")
+			return models.ExecuteResponse{}, fmt.Errorf("compilation error: %v, %s", err, compileOut.String())
 		}
 		cmd = exec.Command("firejail",
 			"--private",
@@ -98,8 +102,10 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			return models.ExecuteResponse{}, errors.New("error writing Rust file")
 		}
 		compileCmd := exec.Command("rustc", tmpFile, "-o", binaryFile)
+		var compileOut bytes.Buffer
+		compileCmd.Stderr = &compileOut
 		if err := compileCmd.Run(); err != nil {
-			return models.ExecuteResponse{}, errors.New("compilation error")
+			return models.ExecuteResponse{}, fmt.Errorf("compilation error: %v, %s", err, compileOut.String())
 		}
 		cmd = exec.Command("firejail",
 			"--private",
