@@ -67,6 +67,7 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			"--net=none",
 			maxMemoryFlag,
 			binaryFile)
+
 	case "cpp":
 		processUUID := uuid.New().String()
 		tmpFile := fmt.Sprintf("/tmp/%s.cpp", processUUID)
@@ -116,17 +117,6 @@ func ExecuteCode(req models.ExecuteRequest) (models.ExecuteResponse, error) {
 			"--net=none",
 			maxMemoryFlag,
 			binaryFile)
-
-	// case "javascript":
-	// 	cmd = exec.Command("firejail",
-	// 		"--private",
-	// 		"--quiet",
-	// 		"--noroot",
-	// 		"--caps.drop=all",
-	// 		"--read-only=/",
-	// 		"--net=none",
-	// 		maxMemoryFlag,
-	// 		"bun", "-e", req.Code)
 
 	case "java":
 		processUUID := uuid.New().String()
