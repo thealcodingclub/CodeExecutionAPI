@@ -1,3 +1,6 @@
+# ❗❗❗ this repo is no longer supported ❗❗❗
+# The api endpoints will still work but are actually being sent to the [new repo](https://github.com/Anga205/ContainerizationAPI)
+
 # Code Execution API
 
 This API is used to execute code snippets in different languages. Given below are the details of this API
